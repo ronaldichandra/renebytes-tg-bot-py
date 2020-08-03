@@ -116,35 +116,34 @@ WEATHER_DEFLANG = os.environ.get("WEATHER_DEFLANG") or None
 # Genius lyrics API
 GENIUS = os.environ.get("GENIUS_ACCESS_TOKEN") or None
 
-# Lydia API
-LYDIA_API_KEY = os.environ.get("LYDIA_API_KEY") or None
-
 # Quotes API Token
 QUOTES_API_TOKEN = os.environ.get("QUOTES_API_TOKEN") or None
+
+# Wolfram Alpha API
+WOLFRAM_ID = os.environ.get("WOLFRAM_ID") or None
 
 # Anti Spambot Config
 ANTI_SPAMBOT = sb(os.environ.get("ANTI_SPAMBOT") or "False")
 ANTI_SPAMBOT_SHOUT = sb(os.environ.get("ANTI_SPAMBOT_SHOUT") or "False")
 
-# Youtube API key
-YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY") or None
-
 # Default .alive name
 ALIVE_NAME = os.environ.get("ALIVE_NAME") or None
 
 # Default .alive logo
-ALIVE_LOGO = os.environ.get(
-    "ALIVE_LOGO") or "https://telegra.ph/file/bc4b184058f13932957d0.jpg"
+ALIVE_LOGO = os.environ.get("ALIVE_LOGO") or None
 
 # Time & Date - Country and Time Zone
 COUNTRY = str(os.environ.get("COUNTRY") or "")
 TZ_NUMBER = int(os.environ.get("TZ_NUMBER") or 1)
 
 # Version of One4uBot
-USERBOT_VERSION = os.environ.get("USERBOT_VERSION") or "3.4"
+USERBOT_VERSION = os.environ.get("USERBOT_VERSION") or "3.5"
 
 # User Terminal alias
 USER_TERM_ALIAS = os.environ.get("USER_TERM_ALIAS") or "One4uBot"
+
+# Updater alias
+UPDATER_ALIAS = os.environ.get("UPDATER_ALIAS") or "One4uBot"
 
 # Zipfile module
 ZIP_DOWNLOAD_DIRECTORY = os.environ.get("ZIP_DOWNLOAD_DIRECTORY") or "./zips"

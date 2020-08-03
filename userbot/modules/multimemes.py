@@ -10,6 +10,7 @@
 from io import BytesIO
 from PIL import Image
 import asyncio
+from asyncio.exceptions import TimeoutError
 import re
 import random
 from logging import Logger as logger
@@ -356,45 +357,43 @@ async def silently_send_message(conv, text):
     return response
 
 
-@register(outgoing=True, pattern="^.q(?: |$)(.*)")
+@register(outgoing=True, pattern=r"^\.q")
 async def quotess(qotli):
     if qotli.fwd_from:
         return
     if not qotli.reply_to_msg_id:
-        await qotli.edit("```Reply to any user message.```")
-        return
+        return await qotli.edit("```Reply to any user message.```")
     reply_message = await qotli.get_reply_message()
     if not reply_message.text:
-        await qotli.edit("```Reply to text message```")
-        return
+        return await qotli.edit("```Reply to text message```")
     chat = "@QuotLyBot"
-    reply_message.sender
     if reply_message.sender.bot:
-        await qotli.edit("```Reply to actual users message.```")
-        return
+        return await qotli.edit("```Reply to actual users message.```")
     await qotli.edit("```Making a Quote```")
-    async with bot.conversation(chat) as conv:
-        try:
-            response = conv.wait_event(
-                events.NewMessage(
-                    incoming=True,
-                    from_users=1031952739))
-            msg = await bot.forward_messages(chat, reply_message)
-            response = await response
-            """ - don't spam notif - """
-            await bot.send_read_acknowledge(conv.chat_id)
-        except YouBlockedUserError:
-            await qotli.reply("```Please unblock @QuotLyBot and try again```")
-            return
-        if response.text.startswith("Hi!"):
-            await qotli.edit("```Can you kindly disable your forward privacy settings for good?```")
-        else:
-            await qotli.delete()
-            await bot.forward_messages(qotli.chat_id, response.message)
-            await bot.send_read_acknowledge(qotli.chat_id)
-            """ - cleanup chat after completed - """
-            await qotli.client.delete_messages(conv.chat_id,
-                                               [msg.id, response.id])
+    try:
+        async with bot.conversation(chat) as conv:
+            try:
+                response = conv.wait_event(
+                    events.NewMessage(
+                        incoming=True,
+                        from_users=1031952739))
+                msg = await bot.forward_messages(chat, reply_message)
+                response = await response
+                """ - don't spam notif - """
+                await bot.send_read_acknowledge(conv.chat_id)
+            except YouBlockedUserError:
+                return await qotli.reply("```Please unblock @QuotLyBot and try again```")
+            if response.text.startswith("Hi!"):
+                await qotli.edit("```Can you kindly disable your forward privacy settings for good?```")
+            else:
+                await qotli.delete()
+                await bot.forward_messages(qotli.chat_id, response.message)
+                await bot.send_read_acknowledge(qotli.chat_id)
+                """ - cleanup chat after completed - """
+                await qotli.client.delete_messages(conv.chat_id,
+                                                   [msg.id, response.id])
+    except TimeoutError:
+        await qotli.edit()
 
 
 @register(outgoing=True, pattern=r'^.hz(:? |$)(.*)?')
@@ -539,31 +538,34 @@ async def lastname(steal):
     if not steal.reply_to_msg_id:
         await steal.edit("```Reply to any user message.```")
         return
-    reply_message = await steal.get_reply_message()
-    if not reply_message.text:
-        await steal.edit("```reply to text message```")
-        return
+    message = await steal.get_reply_message()
     chat = "@SangMataInfo_bot"
-    reply_message.sender
-    if reply_message.sender.bot:
+    user_id = message.sender.id
+    id = f"/search_id {user_id}"
+    if message.sender.bot:
         await steal.edit("```Reply to actual users message.```")
         return
     await steal.edit("```Sit tight while I steal some data from NASA```")
     async with bot.conversation(chat) as conv:
         try:
-            response = conv.wait_event(
-                events.NewMessage(
-                    incoming=True,
-                    from_users=461843263))
-            await bot.forward_messages(chat, reply_message)
-            response = await response
+            msg = await conv.send_message(id)
+            r = await conv.get_response()
+            response = await conv.get_response()
         except YouBlockedUserError:
             await steal.reply("```Please unblock @sangmatainfo_bot and try again```")
             return
-        if response.text.startswith("Forward"):
-            await steal.edit("```can you kindly disable your forward privacy settings for good?```")
+        if response.text.startswith("No records"):
+            await steal.edit("```No records found for this user```")
+            await steal.client.delete_messages(
+                conv.chat_id,
+                [msg.id, r.id, response.id])
+            return
         else:
-            await steal.edit(f"{response.message.message}")
+            respond = await conv.get_response()
+            await steal.edit(f"{response.message}")
+        await steal.client.delete_messages(
+            conv.chat_id,
+            [msg.id, r.id, response.id, respond.id])
 
 
 @register(outgoing=True, pattern="^.waifu(?: |$)(.*)")
